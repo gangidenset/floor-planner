@@ -1,0 +1,19 @@
+{
+  "name": "AI Floor Planner 間取り・家具配置",
+  "short_name": "Floor Planner",
+  "description": "間取り図を読み込み、家具を実寸で配置して、配置案を提案してもらえるアプリ",
+  "lang": "ja",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f3f1",
+  "theme_color": "#1f6feb",
+  "categories": ["lifestyle", "productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

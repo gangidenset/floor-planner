@@ -1,0 +1,10 @@
+{
+  "name": "ai-floor-planner",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "2D間取り図・家具配置・AIレイアウト提案Webアプリ",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

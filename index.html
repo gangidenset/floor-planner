@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1f6feb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Floor Planner">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <title>AI Floor Planner</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="alternate icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='3' width='26' height='26' rx='4' fill='%23fff' stroke='%23333' stroke-width='2'/%3E%3Crect x='7' y='17' width='12' height='7' rx='2' fill='%23b7a99a'/%3E%3Crect x='19' y='7' width='6' height='10' fill='%23c9a77c'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <button class="icon-btn only-narrow" id="toggle-left" title="家具一覧を開く" aria-label="家具一覧を開く">☰</button>
+      <span class="logo" aria-hidden="true"></span>
+      <h1>AI Floor Planner</h1>
+    </div>
+    <div class="project-name">
+      <input id="project-name" type="text" aria-label="プロジェクト名" maxlength="60">
+      <span id="dirty-flag" class="dirty-flag" hidden>未保存</span>
+    </div>
+    <nav class="toolbar" aria-label="メイン操作">
+      <button id="btn-new" class="wide-only" title="新規プロジェクト">新規</button>
+      <button id="btn-open" class="wide-only" title="保存済みのプロジェクトを開く">開く</button>
+      <button id="btn-import-plan" class="accent-outline wide-only" title="PNG / JPG / PDF の間取り図を読み込む">間取りを読み込む</button>
+      <button id="btn-save" class="primary" title="ブラウザに保存（Ctrl+S）">保存</button>
+      <span class="sep wide-only"></span>
+      <button id="btn-undo" class="wide-only" title="元に戻す（Ctrl+Z）">元に戻す</button>
+      <button id="btn-redo" class="wide-only" title="やり直す（Ctrl+Y）">やり直す</button>
+      <span class="sep wide-only"></span>
+      <button id="btn-png" class="wide-only" title="画像として書き出し">PNG書き出し</button>
+      <div class="menu-wrap">
+        <button id="btn-more" aria-haspopup="true" aria-expanded="false" title="その他">その他 ▾</button>
+        <div class="menu" id="more-menu" hidden>
+          <button class="narrow-only" data-click="btn-new">新規プロジェクト</button>
+          <button class="narrow-only" data-click="btn-open">保存したプロジェクトを開く</button>
+          <button class="narrow-only" data-click="btn-import-plan">間取りを読み込む（画像・PDF）</button>
+          <button class="narrow-only" data-click="btn-png">画像（PNG）として書き出し</button>
+          <hr class="narrow-only">
+          <button data-action="print-plan">印刷・PDF（寸法入りの間取り図）</button>
+          <button data-action="furniture-list">家具リスト（購入リスト・搬入チェック）</button>
+          <button data-action="backup-all">すべてをバックアップ（ファイルに保存）</button>
+          <button data-action="import-json">ファイルを読み込む（プロジェクト・バックアップの復元）</button>
+          <button data-action="export-json">このプロジェクトだけ書き出し</button>
+          <button data-action="save-as">プロジェクトを複製して保存</button>
+          <button data-action="help">操作方法</button>
+          <button data-action="install" id="btn-install" hidden>ホーム画面にアプリとして追加</button>
+        </div>
+      </div>
+    </nav>
+    <button class="icon-btn only-narrow" id="toggle-right" title="設定パネルを開く" aria-label="設定パネルを開く">⚙</button>
+    <input type="file" id="file-plan" accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf" hidden>
+    <input type="file" id="file-json" accept=".json,application/json" hidden>
+  </header>
+
+  <main class="workspace">
+    <aside class="panel left-panel" id="left-panel" aria-label="家具ライブラリ">
+      <div class="panel-head">
+        <h2>家具ライブラリ</h2>
+        <input id="lib-search" type="search" placeholder="家具を検索" aria-label="家具を検索">
+      </div>
+      <p class="hint">クリックで追加、またはキャンバスへドラッグ</p>
+      <div id="library" class="library"></div>
+    </aside>
+
+    <section class="canvas-area" id="canvas-area">
+      <div class="mode-banner" id="mode-banner" hidden></div>
+      <div class="preview-banner" id="preview-banner" hidden></div>
+      <svg id="canvas" class="canvas" role="application" aria-label="間取り図と家具の配置キャンバス"></svg>
+      <div class="layout-switch" id="layout-switch"></div>
+      <div class="touch-bar" id="touch-bar" role="toolbar" aria-label="よく使う操作">
+        <button id="tb-undo" aria-label="元に戻す" title="元に戻す">↶<span>戻す</span></button>
+        <button id="tb-redo" aria-label="やり直す" title="やり直す">↷<span>やり直し</span></button>
+        <span class="tb-sel" id="tb-sel" hidden>
+          <button id="tb-rotate" title="90°回転">⟳<span>回転</span></button>
+          <button id="tb-flip" title="左右反転">⇋<span>反転</span></button>
+          <button id="tb-dup" title="複製">⧉<span>複製</span></button>
+          <button id="tb-del" class="danger" title="削除">🗑<span>削除</span></button>
+          <button id="tb-props" class="primary" title="大きさ・色などを変える">✎<span>詳細</span></button>
+        </span>
+      </div>
+      <footer class="statusbar">
+        <div class="group">
+          <button class="icon-btn" id="zoom-out" title="縮小" aria-label="縮小">−</button>
+          <span id="zoom-label" class="zoom-label">100%</span>
+          <button class="icon-btn" id="zoom-in" title="拡大" aria-label="拡大">＋</button>
+          <button id="zoom-fit" title="全体を表示">全体</button>
+          <button id="btn-measure" title="2点をクリックして距離を測ります（M キー）">📏 測る</button>
+          <button id="btn-3d" title="斜め上から見た立体の図を表示します（V キー）">🧊 立体表示</button>
+        </div>
+        <div class="group toggles">
+          <label><input type="checkbox" id="opt-grid" checked> グリッド</label>
+          <label><input type="checkbox" id="opt-snap" checked> スナップ</label>
+          <label><input type="checkbox" id="opt-dims" checked> 寸法</label>
+          <label><input type="checkbox" id="opt-labels" checked> 家具名</label>
+          <label><input type="checkbox" id="opt-flow"> 通路表示</label>
+          <label title="チェックで問題が出ている家具を点線で囲みます（赤＝重要、オレンジ＝注意）"><input type="checkbox" id="opt-issues" checked> チェック表示</label>
+        </div>
+        <div class="group grow">
+          <span id="scale-status" class="scale-status"></span>
+        </div>
+        <div class="group">
+          <span id="cursor-pos" class="cursor-pos"></span>
+        </div>
+      </footer>
+    </section>
+
+    <aside class="panel right-panel" id="right-panel" aria-label="設定とAI提案">
+      <div class="tabs" role="tablist">
+        <button role="tab" class="tab active" data-tab="props" aria-selected="true">配置設定</button>
+        <button role="tab" class="tab" data-tab="ai" aria-selected="false">AI提案</button>
+        <button role="tab" class="tab" data-tab="check" aria-selected="false">チェック <span id="check-badge" class="badge" hidden></span></button>
+      </div>
+      <div class="tab-body" id="tab-props"></div>
+      <div class="tab-body" id="tab-ai" hidden></div>
+      <div class="tab-body" id="tab-check" hidden></div>
+    </aside>
+  </main>
+  <div class="scrim" id="scrim" hidden></div>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
