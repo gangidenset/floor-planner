@@ -310,6 +310,7 @@ kbd { border: 1px solid var(--line-strong); border-bottom-width: 2px; border-rad
 
 /* ---------- スマホ（タッチ操作・ホーム画面のアプリ） ---------- */
 .narrow-only { display: none; }
+.menu .install-item { color: var(--accent); font-weight: 600; }
 .menu hr { border: none; border-top: 1px solid var(--line); margin: 4px 2px; }
 .touch-bar { display: none; }
 
@@ -353,4 +354,15 @@ kbd { border: 1px solid var(--line-strong); border-bottom-width: 2px; border-rad
   /* 画面の切り替え・入力欄の自動ズームを防ぐ（iOS は 16px 未満の入力欄で拡大する） */
   input[type="text"], input[type="number"], input[type="search"], input[type="url"], select, textarea { font-size: 16px; }
   .layout-switch select { font-size: 14px; }
+}
+
+/* ダイアログ：スマホではボタンを折り返し、画面の高さ（アドレスバーを除く）に収める */
+@media (max-width: 600px) {
+  .modal-backdrop { padding: 10px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+  .modal { max-height: calc(100dvh - 20px); }
+  .modal-foot { flex-wrap: wrap; }
+  .modal-foot button { flex: 1 1 auto; min-height: 40px; }
+  .modal-foot button.primary { order: -1; flex-basis: 100%; }
+  /* 画像の上は枠の操作に使う（ページのスクロールは画像の外を指でなぞる） */
+  .detect-svg { touch-action: none; max-height: 45vh; }
 }

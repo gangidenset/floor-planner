@@ -121,6 +121,8 @@ export async function autoDetectPlan() {
       const target = body.querySelector('#det-total') || body.querySelector('#det-jo');
       target.scrollIntoView({ block: 'center' });
       target.focus();
+      // スマホでは注意書きが画面の外になることがあるので、トーストでも知らせる
+      toast('広さが空欄です。入力するか、このままでよければもう一度「間取りを作成」を押してください', '', 6000);
       return false;
     },
     collect: body => ({
